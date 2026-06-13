@@ -20,6 +20,9 @@ Imports:
     tibble,
     stats
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
 URL: https://github.com/tomdrake/fragilitidy
 BugReports: https://github.com/tomdrake/fragilitidy/issues
