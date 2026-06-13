@@ -370,7 +370,7 @@ revfragility_index_vec <- function(intervention_event, control_event, interventi
 # Data Frame / Tidyverse Functions
 # ==============================================================================
 
-#' Tidyverse-Compatible Fragility Index
+#' Fragility Index for a Data Frame
 #'
 #' Computes the fragility index for columns in a data frame.
 #' Supports tidy evaluation and integrates with `%>%` or `|>`.
@@ -386,7 +386,7 @@ revfragility_index_vec <- function(intervention_event, control_event, interventi
 #'
 #' @return The original data frame with an added column for the fragility index.
 #' @export
-tidy_fragility_index <- function(data, intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, col_name = "fragility_index") {
+fragility_index <- function(data, intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, col_name = "fragility_index") {
   if (!is.data.frame(data)) {
     stop("`data` must be a data frame.")
   }
@@ -406,7 +406,7 @@ tidy_fragility_index <- function(data, intervention_event, control_event, interv
     )
 }
 
-#' Tidyverse-Compatible Reverse Fragility Index
+#' Reverse Fragility Index for a Data Frame
 #'
 #' Computes the reverse fragility index for columns in a data frame.
 #' Supports tidy evaluation and integrates with `%>%` or `|>`.
@@ -423,7 +423,7 @@ tidy_fragility_index <- function(data, intervention_event, control_event, interv
 #'
 #' @return The original data frame with an added column for the reverse fragility index.
 #' @export
-tidy_revfragility_index <- function(data, intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, col_name = "revfragility_index", compatibility_mode = FALSE) {
+revfragility_index <- function(data, intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, col_name = "revfragility_index", compatibility_mode = FALSE) {
   if (!is.data.frame(data)) {
     stop("`data` must be a data frame.")
   }

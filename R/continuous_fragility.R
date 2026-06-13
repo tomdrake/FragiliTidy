@@ -115,13 +115,13 @@ simulate_arm <- function(n, target_mean, target_sd,
 #' fragility index of continuous outcomes. *J Clin Epidemiol* 2021;136:20-25.
 #'
 #' @examples
-#' continuous_fragility_index(
+#' continuous_fragility_index_summary(
 #'   mean1 = 70, sd1 = 10, n1 = 100,
 #'   mean2 = 50, sd2 = 10, n2 = 100,
 #'   seed  = 1
 #' )
 #' @export
-continuous_fragility_index <- function(mean1, sd1, n1,
+continuous_fragility_index_summary <- function(mean1, sd1, n1,
                                        mean2, sd2, n2,
                                        conf.level = 0.95,
                                        n_sim = 5L,
@@ -164,11 +164,11 @@ continuous_fragility_index_raw <- function(x, y, conf.level = 0.95) {
 
 #' Vectorised Continuous Fragility Index
 #'
-#' Vectorised wrapper around [continuous_fragility_index()] for use inside
-#' `dplyr::mutate()`.
+#' Vectorised wrapper around [continuous_fragility_index_summary()] for use
+#' inside `dplyr::mutate()`.
 #'
 #' @param mean1,sd1,n1,mean2,sd2,n2 Numeric vectors of summary statistics.
-#' @param conf.level,n_sim,tol_mean,tol_sd See [continuous_fragility_index()].
+#' @param conf.level,n_sim,tol_mean,tol_sd See [continuous_fragility_index_summary()].
 #'
 #' @return A numeric vector of CFI values.
 #' @export
@@ -178,13 +178,161 @@ continuous_fragility_index_vec <- function(mean1, sd1, n1, mean2, sd2, n2,
   args <- tibble::tibble(m1 = mean1, s1 = sd1, k1 = n1,
                          m2 = mean2, s2 = sd2, k2 = n2)
   purrr::pmap_dbl(args, function(m1, s1, k1, m2, s2, k2) {
-    continuous_fragility_index(m1, s1, k1, m2, s2, k2,
-                               conf.level = conf.level, n_sim = n_sim,
-                               tol_mean = tol_mean, tol_sd = tol_sd)
+    continuous_fragility_index_summary(m1, s1, k1, m2, s2, k2,
+                                       conf.level = conf.level, n_sim = n_sim,
+                                       tol_mean = tol_mean, tol_sd = tol_sd)
   })
 }
 
-#' Tidyverse-Compatible Continuous Fragility Index
+#' Core reverse CFI algorithm on two numeric vectors
+#'
+#' Repeatedly draws one additional participant for each arm from the arm's
+#' assumed normal distribution and counts how many pairs must be added before
+#' the Welch t-test reaches significance.
+#'
+#' @noRd
+calc_rcfi_from_vectors <- function(x, y, mean_x, sd_x, mean_y, sd_y,
+                                   conf.level = 0.95, max_iter = 10000L) {
+  alpha <- 1 - conf.level
+  p <- fast_welch_p(x, y)
+  if (!is.na(p) && p < alpha) return(0L)
+
+  for (iter in seq_len(max_iter)) {
+    x <- c(x, stats::rnorm(1, mean_x, sd_x))
+    y <- c(y, stats::rnorm(1, mean_y, sd_y))
+    p <- fast_welch_p(x, y)
+    if (!is.na(p) && p < alpha) return(iter)
+  }
+  NA_integer_
+}
+
+#' Reverse Continuous Fragility Index
+#'
+#' Estimates how many additional participants per arm would have been required
+#' to render a non-significant Welch t-test significant, given two-arm summary
+#' statistics. This is a continuous-outcome analogue of the reverse fragility
+#' index for dichotomous outcomes: a measure of how far a non-significant
+#' trial was from significance, expressed in participants per arm.
+#'
+#' If the original test is already significant the function returns `0`.
+#' Otherwise additional participants are sampled from each arm's assumed
+#' normal distribution (parameterised by the supplied mean and SD) and added
+#' one per arm per iteration until significance is reached. The procedure is
+#' repeated `n_sim` times and the mean is returned.
+#'
+#' @param mean1,sd1,n1 Mean, standard deviation, and sample size of arm 1.
+#' @param mean2,sd2,n2 Mean, standard deviation, and sample size of arm 2.
+#' @param conf.level Confidence level for the Welch t-test (default `0.95`).
+#' @param n_sim Number of simulated datasets to average over (default `5`).
+#' @param tol_mean,tol_sd Relative tolerances for rejection sampling.
+#' @param max_iter Maximum additional participants per arm before giving up
+#'   and returning `NA_real_` (default `10000`).
+#' @param seed Optional integer seed for reproducibility.
+#'
+#' @return A single numeric value: mean additional participants per arm
+#'   required to reach significance across `n_sim` simulations. Returns `0`
+#'   if the original test was already significant.
+#'
+#' @examples
+#' reverse_continuous_fragility_index_summary(
+#'   mean1 = 55, sd1 = 10, n1 = 30,
+#'   mean2 = 50, sd2 = 10, n2 = 30,
+#'   seed  = 1
+#' )
+#' @export
+reverse_continuous_fragility_index_summary <- function(mean1, sd1, n1,
+                                               mean2, sd2, n2,
+                                               conf.level = 0.95,
+                                               n_sim = 5L,
+                                               tol_mean = 0.01,
+                                               tol_sd = 0.01,
+                                               max_iter = 10000L,
+                                               seed = NULL) {
+  if (any(is.na(c(mean1, sd1, n1, mean2, sd2, n2)))) return(NA_real_)
+  if (n1 < 2 || n2 < 2) return(NA_real_)
+  if (!is.null(seed)) set.seed(seed)
+
+  n1 <- as.integer(n1); n2 <- as.integer(n2)
+  vals <- numeric(n_sim)
+  for (i in seq_len(n_sim)) {
+    x <- simulate_arm(n1, mean1, sd1, tol_mean, tol_sd)
+    y <- simulate_arm(n2, mean2, sd2, tol_mean, tol_sd)
+    vals[i] <- calc_rcfi_from_vectors(x, y, mean1, sd1, mean2, sd2,
+                                      conf.level = conf.level,
+                                      max_iter = max_iter)
+  }
+  mean(vals)
+}
+
+#' Vectorised Reverse Continuous Fragility Index
+#'
+#' Vectorised wrapper around [reverse_continuous_fragility_index_summary()]
+#' for use inside `dplyr::mutate()`.
+#'
+#' @param mean1,sd1,n1,mean2,sd2,n2 Numeric vectors of summary statistics.
+#' @param conf.level,n_sim,tol_mean,tol_sd,max_iter See
+#'   [reverse_continuous_fragility_index_summary()].
+#'
+#' @return A numeric vector of reverse CFI values.
+#' @export
+reverse_continuous_fragility_index_vec <- function(mean1, sd1, n1,
+                                                   mean2, sd2, n2,
+                                                   conf.level = 0.95,
+                                                   n_sim = 5L,
+                                                   tol_mean = 0.01,
+                                                   tol_sd = 0.01,
+                                                   max_iter = 10000L) {
+  args <- tibble::tibble(m1 = mean1, s1 = sd1, k1 = n1,
+                         m2 = mean2, s2 = sd2, k2 = n2)
+  purrr::pmap_dbl(args, function(m1, s1, k1, m2, s2, k2) {
+    reverse_continuous_fragility_index_summary(m1, s1, k1, m2, s2, k2,
+                                               conf.level = conf.level,
+                                               n_sim = n_sim,
+                                               tol_mean = tol_mean,
+                                               tol_sd = tol_sd,
+                                               max_iter = max_iter)
+  })
+}
+
+#' Reverse Continuous Fragility Index for a Data Frame
+#'
+#' Adds a reverse Continuous Fragility Index column to a data frame of trial
+#' summary statistics.
+#'
+#' @param data A data frame or tibble.
+#' @param mean1,sd1,n1 Unquoted column names for arm 1 summary stats.
+#' @param mean2,sd2,n2 Unquoted column names for arm 2 summary stats.
+#' @param conf.level,n_sim,tol_mean,tol_sd,max_iter See
+#'   [reverse_continuous_fragility_index_summary()].
+#' @param col_name Output column name (default
+#'   `"reverse_continuous_fragility_index"`).
+#'
+#' @return The input data frame with an additional reverse CFI column.
+#' @export
+reverse_continuous_fragility_index <- function(data,
+                                                    mean1, sd1, n1,
+                                                    mean2, sd2, n2,
+                                                    conf.level = 0.95,
+                                                    n_sim = 5L,
+                                                    tol_mean = 0.01,
+                                                    tol_sd = 0.01,
+                                                    max_iter = 10000L,
+                                                    col_name = "reverse_continuous_fragility_index") {
+  if (!is.data.frame(data)) stop("`data` must be a data frame.")
+  col_name_sym <- rlang::sym(col_name)
+  data %>%
+    dplyr::mutate(
+      !!col_name_sym := reverse_continuous_fragility_index_vec(
+        {{ mean1 }}, {{ sd1 }}, {{ n1 }},
+        {{ mean2 }}, {{ sd2 }}, {{ n2 }},
+        conf.level = conf.level, n_sim = n_sim,
+        tol_mean = tol_mean, tol_sd = tol_sd,
+        max_iter = max_iter
+      )
+    )
+}
+
+#' Continuous Fragility Index for a Data Frame
 #'
 #' Adds a Continuous Fragility Index column to a data frame of trial summary
 #' statistics. Supports tidy evaluation.
@@ -192,12 +340,14 @@ continuous_fragility_index_vec <- function(mean1, sd1, n1, mean2, sd2, n2,
 #' @param data A data frame or tibble.
 #' @param mean1,sd1,n1 Unquoted column names for arm 1 mean, SD, and sample size.
 #' @param mean2,sd2,n2 Unquoted column names for arm 2 mean, SD, and sample size.
-#' @param conf.level,n_sim,tol_mean,tol_sd See [continuous_fragility_index()].
-#' @param col_name Name of the output column (default `"continuous_fragility_index"`).
+#' @param conf.level,n_sim,tol_mean,tol_sd See
+#'   [continuous_fragility_index_summary()].
+#' @param col_name Name of the output column (default
+#'   `"continuous_fragility_index"`).
 #'
 #' @return The input data frame with an additional CFI column.
 #' @export
-tidy_continuous_fragility_index <- function(data,
+continuous_fragility_index <- function(data,
                                             mean1, sd1, n1,
                                             mean2, sd2, n2,
                                             conf.level = 0.95,

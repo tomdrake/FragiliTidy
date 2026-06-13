@@ -1,0 +1,115 @@
+---
+title: "Introduction to FragiliTidy"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to FragiliTidy}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+`FragiliTidy` provides fast, tidyverse-friendly implementations of fragility
+metrics for two-arm clinical trials:
+
+- **Fragility Index (FI)** and **Reverse Fragility Index (RFI)** for
+  dichotomous outcomes (Walsh et al., 2014), with custom 2x2 Fisher's exact
+  and chi-squared routines and binary search.
+- **Continuous Fragility Index (CFI)** for continuous outcomes
+  (Caldwell et al., 2021), with summary-statistic simulation.
+- **Reverse Continuous Fragility Index (rCFI)**: how many additional
+  participants per arm would have been needed for a non-significant
+  continuous outcome to reach significance.
+
+```{r setup}
+library(FragiliTidy)
+library(dplyr)
+library(tibble)
+```
+
+## Dichotomous outcomes
+
+```{r}
+trials <- tribble(
+  ~study,    ~ie, ~ce, ~in_, ~cn,
+  "Trial A",  10,  20,  100,  100,
+  "Trial B",   5,  15,   80,   80,
+  "Trial C",  30,  30,  200,  200
+)
+
+trials |>
+  fragility_index(ie, ce, in_, cn) |>
+  revfragility_index(ie, ce, in_, cn)
+```
+
+## Continuous outcomes
+
+### From raw data
+
+```{r}
+set.seed(1)
+x <- rnorm(50, mean = 70, sd = 10)
+y <- rnorm(50, mean = 50, sd = 10)
+continuous_fragility_index_raw(x, y)
+```
+
+### From summary statistics
+
+When raw per-patient outcomes are not available, the CFI is estimated by
+simulating compatible datasets via rejection sampling and averaging the
+iterative substitution result over `n_sim` simulations (Caldwell et al.,
+2021):
+
+```{r}
+continuous_fragility_index_summary(
+  mean1 = 70, sd1 = 10, n1 = 100,
+  mean2 = 50, sd2 = 10, n2 = 100,
+  seed  = 1
+)
+```
+
+### Reverse CFI: distance from significance
+
+For non-significant trials, the reverse CFI estimates how many additional
+participants *per arm* would have been required to reach significance, given
+the observed effect size and variance:
+
+```{r}
+reverse_continuous_fragility_index_summary(
+  mean1 = 55, sd1 = 10, n1 = 30,
+  mean2 = 50, sd2 = 10, n2 = 30,
+  seed  = 1
+)
+```
+
+### Tidy interface
+
+Both CFI variants integrate into `dplyr` pipelines:
+
+```{r}
+trials_continuous <- tribble(
+  ~study,    ~m1, ~s1, ~k1, ~m2, ~s2, ~k2,
+  "Trial X",  70,  10,  50,  50,  10,  50,
+  "Trial Y",  60,  15,  40,  55,  15,  40
+)
+
+trials_continuous |>
+  continuous_fragility_index(m1, s1, k1, m2, s2, k2) |>
+  reverse_continuous_fragility_index(m1, s1, k1, m2, s2, k2)
+```
+
+## References
+
+- Walsh M, Srinathan SK, McAuley DF, et al. The statistical significance of
+  randomized controlled trial results is frequently fragile: a case for a
+  Fragility Index. *J Clin Epidemiol* 2014;67:622-628.
+- Caldwell JE, Youssefzadeh K, Limpisvasti O. A method for calculating the
+  fragility index of continuous outcomes. *J Clin Epidemiol* 2021;136:20-25.
+- Hurley ET et al. The Continuous Fragility Index of Statistically
+  Significant Findings in Randomized Controlled Trials in the Anterior
+  Shoulder Instability Literature. *Am J Sports Med* 2023.
