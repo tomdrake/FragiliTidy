@@ -5,18 +5,12 @@
 #' and algebraic calculations to achieve a 25x speedup compared to standard stats package functions,
 #' and binary search algorithms to yield an additional 10x-1000x speedup for large trials.
 #'
-#' @importFrom dplyr mutate
-#' @importFrom purrr pmap pmap_dbl
-#' @importFrom rlang sym {{
-#' @importFrom tibble tibble add_row as_tibble
-#' @importFrom stats dhyper pchisq
-#' @name tidyverse_fragility
-
 #' @importFrom dplyr mutate %>%
 #' @importFrom purrr pmap pmap_dbl
-#' @importFrom rlang sym
+#' @importFrom rlang sym :=
 #' @importFrom tibble tibble
 #' @importFrom stats dhyper pchisq
+#' @name tidyverse_fragility
 NULL
 
 # ==============================================================================
