@@ -6,8 +6,7 @@ Fragility Index) and **continuous** outcomes (Continuous Fragility Index and
 Reverse Continuous Fragility Index).
 
 `FragiliTidy` is designed to be fast
-(~25x faster than `stats::fisher.test()` / `stats::chisq.test()`) incorporating
-plus rejection sampling and an iterative Welch t-test substitution algorithm
+(~25x faster than `stats::fisher.test()` / `stats::chisq.test()`) incorporating rejection sampling and an iterative Welch t-test substitution algorithm
 for the continuous indices. Everything plugs directly into `tidyverse` syntax.
 
 ## Installation
