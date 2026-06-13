@@ -5,11 +5,10 @@ trials — for both **dichotomous** outcomes (Fragility Index / Reverse
 Fragility Index) and **continuous** outcomes (Continuous Fragility Index and
 Reverse Continuous Fragility Index).
 
-`FragiliTidy` uses customized hypergeometric and algebraic 2x2 routines
-(~25x faster than `stats::fisher.test()` / `stats::chisq.test()`) and binary
-search to give an additional 10x–1000x speedup on the dichotomous indices,
+`FragiliTidy` is designed to be fast
+(~25x faster than `stats::fisher.test()` / `stats::chisq.test()`) incorporating
 plus rejection sampling and an iterative Welch t-test substitution algorithm
-for the continuous indices. Everything plugs directly into `dplyr` pipelines.
+for the continuous indices. Everything plugs directly into `tidyverse` syntax.
 
 ## Installation
 
