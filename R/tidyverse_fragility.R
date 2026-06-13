@@ -12,10 +12,12 @@
 #' @importFrom stats dhyper pchisq
 #' @name tidyverse_fragility
 
-library(dplyr)
-library(purrr)
-library(rlang)
-library(tibble)
+#' @importFrom dplyr mutate %>%
+#' @importFrom purrr pmap pmap_dbl
+#' @importFrom rlang sym
+#' @importFrom tibble tibble
+#' @importFrom stats dhyper pchisq
+NULL
 
 # ==============================================================================
 # Optimized Statistical Helper Functions (2x2 Tables)
