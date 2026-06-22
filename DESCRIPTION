@@ -1,7 +1,6 @@
 Package: FragiliTidy
 Title: Tidyverse-Compatible Fragility Index Calculations
 Version: 0.1.0
-Author: Tom Drake
 Authors@R: person(given = "Tom",
                   family = "Drake",
                   role = c("aut", "cre"),
