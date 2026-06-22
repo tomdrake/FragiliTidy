@@ -5,7 +5,6 @@ Authors@R: person(given = "Tom",
                   family = "Drake",
                   role = c("aut", "cre"),
                   email = "t.drake@ed.ac.uk")
-Maintainer: Tom Drake <t.drake@ed.ac.uk>
 Description: Provides optimized, Tidyverse-compatible functions for calculating
     the Fragility Index and Reverse Fragility Index for 2x2 contingency tables
     from clinical trials. Uses customized hypergeometric and algebraic
