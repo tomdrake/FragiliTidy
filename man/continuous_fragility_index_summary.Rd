@@ -5,12 +5,12 @@
 \title{Continuous Fragility Index from summary statistics}
 \usage{
 continuous_fragility_index_summary(
-  mean1,
-  sd1,
-  n1,
-  mean2,
-  sd2,
-  n2,
+  intervention_mean,
+  control_mean,
+  intervention_sd,
+  control_sd,
+  intervention_n,
+  control_n,
   conf.level = 0.95,
   n_sim = 5L,
   tol_mean = 0.01,
@@ -19,9 +19,14 @@ continuous_fragility_index_summary(
 )
 }
 \arguments{
-\item{mean1, sd1, n1}{Mean, standard deviation, and sample size of arm 1.}
+\item{intervention_mean, control_mean}{Mean outcome in the intervention and
+control groups.}
 
-\item{mean2, sd2, n2}{Mean, standard deviation, and sample size of arm 2.}
+\item{intervention_sd, control_sd}{Standard deviation of the outcome in the
+intervention and control groups.}
+
+\item{intervention_n, control_n}{Sample size of the intervention and
+control groups.}
 
 \item{conf.level}{Confidence level for the Welch t-test (default \code{0.95}).}
 
@@ -33,20 +38,30 @@ matching Caldwell et al.).}
 \item{seed}{Optional integer seed for reproducibility.}
 }
 \value{
-A single numeric value: the mean CFI across \code{n_sim} simulations.
-Returns \code{0} if the baseline Welch test is already non-significant and
-\code{NA_real_} if any input is missing.
+A numeric vector (length matching the longest input) of mean CFI
+values across \code{n_sim} simulations. An element is \code{0} if the baseline
+Welch test is already non-significant and \code{NA_real_} if any of that
+element's inputs are missing.
 }
 \description{
 Calculates the Continuous Fragility Index (Caldwell et al. 2021) from
 two-arm summary statistics by simulating compatible datasets and applying
 the iterative substitution algorithm.
 }
+\details{
+All arguments are vectorised, so this function can be called directly on
+data frame columns inside \code{dplyr::mutate()} or \code{dplyr::case_when()} (as
+well as on plain scalars), the same way \code{\link[=fragility_index_vec]{fragility_index_vec()}} and
+\code{\link[=reverse_fragility_index_vec]{reverse_fragility_index_vec()}} are. Its argument structure mirrors
+\code{\link[=fragility_index_vec]{fragility_index_vec()}} (intervention/control pairs for each statistic),
+just with mean/SD/n in place of event counts.
+}
 \examples{
 continuous_fragility_index_summary(
-  mean1 = 70, sd1 = 10, n1 = 100,
-  mean2 = 50, sd2 = 10, n2 = 100,
-  seed  = 1
+  intervention_mean = 70, control_mean = 50,
+  intervention_sd   = 10, control_sd   = 10,
+  intervention_n    = 100, control_n   = 100,
+  seed = 1
 )
 }
 \references{

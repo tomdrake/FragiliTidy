@@ -6,12 +6,12 @@
 \usage{
 reverse_continuous_fragility_index(
   data,
-  mean1,
-  sd1,
-  n1,
-  mean2,
-  sd2,
-  n2,
+  intervention_mean,
+  control_mean,
+  intervention_sd,
+  control_sd,
+  intervention_n,
+  control_n,
   conf.level = 0.95,
   n_sim = 5L,
   tol_mean = 0.01,
@@ -23,9 +23,14 @@ reverse_continuous_fragility_index(
 \arguments{
 \item{data}{A data frame or tibble.}
 
-\item{mean1, sd1, n1}{Unquoted column names for arm 1 summary stats.}
+\item{intervention_mean, control_mean}{Unquoted column names for the
+intervention and control group means.}
 
-\item{mean2, sd2, n2}{Unquoted column names for arm 2 summary stats.}
+\item{intervention_sd, control_sd}{Unquoted column names for the
+intervention and control group standard deviations.}
+
+\item{intervention_n, control_n}{Unquoted column names for the
+intervention and control group sample sizes.}
 
 \item{conf.level, n_sim, tol_mean, tol_sd, max_iter}{See
 \code{\link[=reverse_continuous_fragility_index_summary]{reverse_continuous_fragility_index_summary()}}.}

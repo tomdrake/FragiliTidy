@@ -7,7 +7,8 @@
 continuous_fragility_index_raw(x, y, conf.level = 0.95)
 }
 \arguments{
-\item{x, y}{Numeric vectors of outcome values for arms 1 and 2.}
+\item{x, y}{Numeric vectors of outcome values for the intervention and
+control groups.}
 
 \item{conf.level}{Confidence level for the Welch t-test (default \code{0.95}).}
 }

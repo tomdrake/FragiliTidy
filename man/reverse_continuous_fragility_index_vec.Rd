@@ -5,12 +5,12 @@
 \title{Vectorised Reverse Continuous Fragility Index}
 \usage{
 reverse_continuous_fragility_index_vec(
-  mean1,
-  sd1,
-  n1,
-  mean2,
-  sd2,
-  n2,
+  intervention_mean,
+  control_mean,
+  intervention_sd,
+  control_sd,
+  intervention_n,
+  control_n,
   conf.level = 0.95,
   n_sim = 5L,
   tol_mean = 0.01,
@@ -19,7 +19,8 @@ reverse_continuous_fragility_index_vec(
 )
 }
 \arguments{
-\item{mean1, sd1, n1, mean2, sd2, n2}{Numeric vectors of summary statistics.}
+\item{intervention_mean, control_mean, intervention_sd, control_sd, intervention_n, control_n}{Numeric vectors of summary statistics. See
+\code{\link[=reverse_continuous_fragility_index_summary]{reverse_continuous_fragility_index_summary()}}.}
 
 \item{conf.level, n_sim, tol_mean, tol_sd, max_iter}{See
 \code{\link[=reverse_continuous_fragility_index_summary]{reverse_continuous_fragility_index_summary()}}.}
@@ -28,6 +29,6 @@ reverse_continuous_fragility_index_vec(
 A numeric vector of reverse CFI values.
 }
 \description{
-Vectorised wrapper around \code{\link[=reverse_continuous_fragility_index_summary]{reverse_continuous_fragility_index_summary()}}
-for use inside \code{dplyr::mutate()}.
+\code{\link[=reverse_continuous_fragility_index_summary]{reverse_continuous_fragility_index_summary()}} is itself vectorised, so
+this is now a thin alias kept for backward compatibility.
 }

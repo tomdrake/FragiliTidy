@@ -187,7 +187,7 @@ calc_fragility_single <- function(intervention_event, control_event, interventio
 #' where the verbose = TRUE code checked `control_event > 1` instead of
 #' `control_event > 0`. Default is FALSE (bug fixed).
 #' @noRd
-calc_revfragility_single <- function(intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, compatibility_mode = FALSE) {
+calc_reverse_fragility_single <- function(intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, compatibility_mode = FALSE) {
   if (is.na(intervention_event) || is.na(control_event) || is.na(intervention_n) || is.na(control_n)) {
     return(if (verbose) NULL else NA_real_)
   }
@@ -340,7 +340,7 @@ fragility_index_vec <- function(intervention_event, control_event, intervention_
 #' @return A numeric vector of reverse fragility indices (if `verbose = FALSE`), or a list
 #' of tibbles containing step-by-step p-values (if `verbose = TRUE`).
 #' @export
-revfragility_index_vec <- function(intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, compatibility_mode = FALSE) {
+reverse_fragility_index_vec <- function(intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, compatibility_mode = FALSE) {
   args <- tibble::tibble(
     ie = intervention_event,
     ce = control_event,
@@ -351,11 +351,11 @@ revfragility_index_vec <- function(intervention_event, control_event, interventi
   
   if (!verbose) {
     purrr::pmap_dbl(args, function(ie, ce, in_, cn, cl) {
-      calc_revfragility_single(ie, ce, in_, cn, cl, verbose = FALSE, compatibility_mode = compatibility_mode)
+      calc_reverse_fragility_single(ie, ce, in_, cn, cl, verbose = FALSE, compatibility_mode = compatibility_mode)
     })
   } else {
     purrr::pmap(args, function(ie, ce, in_, cn, cl) {
-      calc_revfragility_single(ie, ce, in_, cn, cl, verbose = TRUE, compatibility_mode = compatibility_mode)
+      calc_reverse_fragility_single(ie, ce, in_, cn, cl, verbose = TRUE, compatibility_mode = compatibility_mode)
     })
   }
 }
@@ -412,12 +412,12 @@ fragility_index <- function(data, intervention_event, control_event, interventio
 #' @param control_n Column name (unquoted) for the control group totals.
 #' @param conf.level Confidence level (default 0.95). Can be a number or a column name.
 #' @param verbose Logical; if TRUE, returns a nested list-column with p-values for each iteration.
-#' @param col_name Name of the output column. Default is `"revfragility_index"`.
+#' @param col_name Name of the output column. Default is `"reverse_fragility_index"`.
 #' @param compatibility_mode If TRUE, reproduces the original package's bug in verbose mode.
 #'
 #' @return The original data frame with an added column for the reverse fragility index.
 #' @export
-revfragility_index <- function(data, intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, col_name = "revfragility_index", compatibility_mode = FALSE) {
+reverse_fragility_index <- function(data, intervention_event, control_event, intervention_n, control_n, conf.level = 0.95, verbose = FALSE, col_name = "reverse_fragility_index", compatibility_mode = FALSE) {
   if (!is.data.frame(data)) {
     stop("`data` must be a data frame.")
   }
@@ -426,7 +426,7 @@ revfragility_index <- function(data, intervention_event, control_event, interven
   
   data %>%
     dplyr::mutate(
-      !!col_name_sym := revfragility_index_vec(
+      !!col_name_sym := reverse_fragility_index_vec(
         {{ intervention_event }},
         {{ control_event }},
         {{ intervention_n }},
