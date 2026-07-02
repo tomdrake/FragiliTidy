@@ -5,12 +5,12 @@
 \title{Reverse Continuous Fragility Index}
 \usage{
 reverse_continuous_fragility_index_summary(
-  mean1,
-  sd1,
-  n1,
-  mean2,
-  sd2,
-  n2,
+  intervention_mean,
+  control_mean,
+  intervention_sd,
+  control_sd,
+  intervention_n,
+  control_n,
   conf.level = 0.95,
   n_sim = 5L,
   tol_mean = 0.01,
@@ -20,9 +20,14 @@ reverse_continuous_fragility_index_summary(
 )
 }
 \arguments{
-\item{mean1, sd1, n1}{Mean, standard deviation, and sample size of arm 1.}
+\item{intervention_mean, control_mean}{Mean outcome in the intervention and
+control groups.}
 
-\item{mean2, sd2, n2}{Mean, standard deviation, and sample size of arm 2.}
+\item{intervention_sd, control_sd}{Standard deviation of the outcome in the
+intervention and control groups.}
+
+\item{intervention_n, control_n}{Sample size of the intervention and
+control groups.}
 
 \item{conf.level}{Confidence level for the Welch t-test (default \code{0.95}).}
 
@@ -36,9 +41,10 @@ and returning \code{NA_real_} (default \code{10000}).}
 \item{seed}{Optional integer seed for reproducibility.}
 }
 \value{
-A single numeric value: mean additional participants per arm
-required to reach significance across \code{n_sim} simulations. Returns \code{0}
-if the original test was already significant.
+A numeric vector (length matching the longest input) of mean
+additional participants per arm required to reach significance across
+\code{n_sim} simulations. An element is \code{0} if that element's original test
+was already significant.
 }
 \description{
 Estimates how many additional participants per arm would have been required
@@ -53,11 +59,19 @@ Otherwise additional participants are sampled from each arm's assumed
 normal distribution (parameterised by the supplied mean and SD) and added
 one per arm per iteration until significance is reached. The procedure is
 repeated \code{n_sim} times and the mean is returned.
+
+All arguments are vectorised, so this function can be called directly on
+data frame columns inside \code{dplyr::mutate()} or \code{dplyr::case_when()} (as
+well as on plain scalars), the same way \code{\link[=fragility_index_vec]{fragility_index_vec()}} and
+\code{\link[=reverse_fragility_index_vec]{reverse_fragility_index_vec()}} are. Its argument structure mirrors
+\code{\link[=reverse_fragility_index_vec]{reverse_fragility_index_vec()}} (intervention/control pairs for each
+statistic), just with mean/SD/n in place of event counts.
 }
 \examples{
 reverse_continuous_fragility_index_summary(
-  mean1 = 55, sd1 = 10, n1 = 30,
-  mean2 = 50, sd2 = 10, n2 = 30,
-  seed  = 1
+  intervention_mean = 55, control_mean = 50,
+  intervention_sd   = 10, control_sd   = 10,
+  intervention_n    = 30, control_n    = 30,
+  seed = 1
 )
 }

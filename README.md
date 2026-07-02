@@ -21,14 +21,14 @@ remotes::install_github("tomdrake/fragilitidy")
 | Function | Purpose |
 | --- | --- |
 | `fragility_index()` | Add a fragility-index column to a data frame (dichotomous outcomes). |
-| `revfragility_index()` | Add a reverse-fragility-index column to a data frame. |
-| `fragility_index_vec()` / `revfragility_index_vec()` | Vectorised forms for `dplyr::mutate()`. |
+| `reverse_fragility_index()` | Add a reverse-fragility-index column to a data frame. |
+| `fragility_index_vec()` / `reverse_fragility_index_vec()` | Vectorised forms for `dplyr::mutate()`. |
 | `continuous_fragility_index()` | Add a Continuous Fragility Index column to a data frame. |
 | `reverse_continuous_fragility_index()` | Add a Reverse Continuous Fragility Index column to a data frame. |
-| `continuous_fragility_index_summary()` | CFI from a single set of summary statistics (mean, SD, n per arm). |
-| `reverse_continuous_fragility_index_summary()` | Reverse CFI from a single set of summary statistics. |
+| `continuous_fragility_index_summary()` | CFI from summary statistics (mean, SD, n per arm). Vectorised, so it works directly on scalars or on data frame columns inside `dplyr::mutate()` / `dplyr::case_when()`. |
+| `reverse_continuous_fragility_index_summary()` | Reverse CFI from summary statistics. Also vectorised for direct use in `mutate()` / `case_when()`. |
 | `continuous_fragility_index_raw()` | CFI from raw per-patient outcome vectors. |
-| `continuous_fragility_index_vec()` / `reverse_continuous_fragility_index_vec()` | Vectorised summary-stat forms. |
+| `continuous_fragility_index_vec()` / `reverse_continuous_fragility_index_vec()` | Aliases of the `_summary()` forms, kept for backward compatibility. |
 
 ## Quick start
 
@@ -47,36 +47,40 @@ trials <- tibble::tribble(
 
 trials |>
   fragility_index(ie, ce, in_, cn) |>
-  revfragility_index(ie, ce, in_, cn)
+  reverse_fragility_index(ie, ce, in_, cn)
 ```
 
 ### Continuous outcomes
 
 ```r
 trials_continuous <- tibble::tribble(
-  ~study,    ~m1, ~s1, ~k1, ~m2, ~s2, ~k2,
-  "Trial X",  70,  10,  50,  50,  10,  50,
-  "Trial Y",  60,  15,  40,  55,  15,  40
+  ~study,    ~intervention_mean, ~control_mean, ~intervention_sd, ~control_sd, ~intervention_n, ~control_n,
+  "Trial X",  70,                 50,            10,               10,          50,              50,
+  "Trial Y",  60,                 55,            15,               15,          40,              40
 )
 
 trials_continuous |>
-  continuous_fragility_index(m1, s1, k1, m2, s2, k2) |>
-  reverse_continuous_fragility_index(m1, s1, k1, m2, s2, k2)
+  continuous_fragility_index(intervention_mean, control_mean, intervention_sd, control_sd, intervention_n, control_n) |>
+  reverse_continuous_fragility_index(intervention_mean, control_mean, intervention_sd, control_sd, intervention_n, control_n)
 ```
 
-Or, for a single trial from summary statistics:
+Or, for a single trial from summary statistics — note the argument structure
+matches `fragility_index_vec()` (intervention/control pairs per statistic),
+just with mean/SD/n instead of event counts, and it's vectorised the same way:
 
 ```r
 continuous_fragility_index_summary(
-  mean1 = 70, sd1 = 10, n1 = 100,
-  mean2 = 50, sd2 = 10, n2 = 100,
-  seed  = 1
+  intervention_mean = 70, control_mean = 50,
+  intervention_sd   = 10, control_sd   = 10,
+  intervention_n    = 100, control_n   = 100,
+  seed = 1
 )
 
 reverse_continuous_fragility_index_summary(
-  mean1 = 55, sd1 = 10, n1 = 30,
-  mean2 = 50, sd2 = 10, n2 = 30,
-  seed  = 1
+  intervention_mean = 55, control_mean = 50,
+  intervention_sd   = 10, control_sd   = 10,
+  intervention_n    = 30, control_n    = 30,
+  seed = 1
 )
 ```
 

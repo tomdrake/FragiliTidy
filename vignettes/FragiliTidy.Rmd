@@ -44,7 +44,7 @@ trials <- tribble(
 
 trials |>
   fragility_index(ie, ce, in_, cn) |>
-  revfragility_index(ie, ce, in_, cn)
+  reverse_fragility_index(ie, ce, in_, cn)
 ```
 
 ## Continuous outcomes
@@ -67,11 +67,16 @@ iterative substitution result over `n_sim` simulations (Caldwell et al.,
 
 ```{r}
 continuous_fragility_index_summary(
-  mean1 = 70, sd1 = 10, n1 = 100,
-  mean2 = 50, sd2 = 10, n2 = 100,
-  seed  = 1
+  intervention_mean = 70, control_mean = 50,
+  intervention_sd   = 10, control_sd   = 10,
+  intervention_n    = 100, control_n   = 100,
+  seed = 1
 )
 ```
+
+`continuous_fragility_index_summary()` takes the same intervention/control
+argument structure as [`fragility_index_vec()`], just with mean/SD/n in place
+of event counts, and is likewise vectorised.
 
 ### Reverse CFI: distance from significance
 
@@ -81,9 +86,10 @@ the observed effect size and variance:
 
 ```{r}
 reverse_continuous_fragility_index_summary(
-  mean1 = 55, sd1 = 10, n1 = 30,
-  mean2 = 50, sd2 = 10, n2 = 30,
-  seed  = 1
+  intervention_mean = 55, control_mean = 50,
+  intervention_sd   = 10, control_sd   = 10,
+  intervention_n    = 30, control_n    = 30,
+  seed = 1
 )
 ```
 
@@ -93,14 +99,32 @@ Both CFI variants integrate into `dplyr` pipelines:
 
 ```{r}
 trials_continuous <- tribble(
-  ~study,    ~m1, ~s1, ~k1, ~m2, ~s2, ~k2,
-  "Trial X",  70,  10,  50,  50,  10,  50,
-  "Trial Y",  60,  15,  40,  55,  15,  40
+  ~study,    ~intervention_mean, ~control_mean, ~intervention_sd, ~control_sd, ~intervention_n, ~control_n,
+  "Trial X",  70,                 50,            10,               10,          50,              50,
+  "Trial Y",  60,                 55,            15,               15,          40,              40
 )
 
 trials_continuous |>
-  continuous_fragility_index(m1, s1, k1, m2, s2, k2) |>
-  reverse_continuous_fragility_index(m1, s1, k1, m2, s2, k2)
+  continuous_fragility_index(intervention_mean, control_mean, intervention_sd, control_sd, intervention_n, control_n) |>
+  reverse_continuous_fragility_index(intervention_mean, control_mean, intervention_sd, control_sd, intervention_n, control_n)
+```
+
+`continuous_fragility_index_summary()` and `reverse_continuous_fragility_index_summary()`
+are themselves vectorised, so they can also be called directly on data frame
+columns inside `mutate()` or `case_when()`, just like `fragility_index_vec()`
+and `reverse_fragility_index_vec()`:
+
+```{r}
+trials_continuous |>
+  mutate(
+    cfi = case_when(
+      intervention_n >= 50 ~ continuous_fragility_index_summary(
+        intervention_mean, control_mean, intervention_sd, control_sd,
+        intervention_n, control_n, seed = 1
+      ),
+      TRUE ~ NA_real_
+    )
+  )
 ```
 
 ## References
